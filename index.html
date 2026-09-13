@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>رسّام - تطبيق الرسم الاحترافي</title>
+<meta name="description" content="تطبيق رسم احترافي متكامل مع دعم كامل للعمل بدون إنترنت وإمكانية التثبيت كتطبيق PWA.">
+<meta property="og:title" content="رسّام - تطبيق الرسم الاحترافي">
+<meta property="og:description" content="تطبيق رسم احترافي متكامل مع دعم كامل للعمل بدون إنترنت وإمكانية التثبيت كتطبيق PWA.">
+<meta property="og:type" content="website">
+
+<!-- PWA Manifest & Mobile Meta Tags -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1A1A26">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="رسّام">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#0D0D14; --surface:#1A1A26; --surface2:#22222F; --border:rgba(255,255,255,.08);
+  --text:#F0EFF8; --text2:rgba(255,255,255,.5); --text3:rgba(255,255,255,.28);
+  --purple:#7C5CBF; --blue:#2783DE; --green:#46A171; --red:#E56458;
+  --yellow:#F5A623; --pink:#FF6B9D;
+  --grad:linear-gradient(135deg,#7C5CBF,#2783DE);
+  --grad2:linear-gradient(135deg,#2783DE,#46A171);
+  --radius:20px; --radius-sm:12px;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Tajawal',Arial,sans-serif; color:var(--text); }
+
+/* ============ SCREENS ============ */
+.screen { position:fixed; inset:0; display:none; flex-direction:column; }
+.screen.active { display:flex; }
+
+/* ============ SPLASH SCREEN ============ */
+#splash {
+  background: linear-gradient(160deg, #1a0533 0%, #0d1f4a 50%, #0a2a1a 100%);
+  align-items:center; justify-content:center;
+}
+.splash-orb {
+  position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none;
+}
+.splash-orb1 { width:400px; height:400px; background:rgba(124,92,191,.3); top:-100px; right:-100px; }
+.splash-orb2 { width:350px; height:350px; background:rgba(39,131,222,.25); bottom:-80px; left:-80px; }
+.splash-inner { z-index:1; text-align:center; animation: splashIn .6s ease; }
+@keyframes splashIn { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:scale(1)} }
+.splash-logo-mark {
+  width:100px; height:100px;
+  background:var(--grad);
+  border-radius:28px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 20px;
+  box-shadow: 0 16px 60px rgba(124,92,191,.5);
+}
+.splash-logo-mark svg { width:56px; height:56px; fill:white; }
+.splash-name {
+  font-size:52px; font-weight:900;
+  background:var(--grad);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:8px;
+}
+.splash-tagline { font-size:16px; color:rgba(255,255,255,.55); margin-bottom:48px; }
+.splash-loader { width:180px; height:3px; background:rgba(255,255,255,.1); border-radius:10px; margin:0 auto; overflow:hidden; }
+.splash-loader-bar { height:100%; width:0%; background:var(--grad); border-radius:10px; animation:loadBar 2s ease forwards; }
+@keyframes loadBar { 0%{width:0%} 60%{width:80%} 100%{width:100%} }
+
+/* ============ ONBOARDING / SIGN-IN SCREENS ============ */
+#onboard {
+  background: linear-gradient(160deg, #1a0533 0%, #0d1f4a 50%, #0a2a1a 100%);
+  overflow-y:auto;
+}
+.onboard-orb {
+  position:fixed; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0;
+}
+.ob1 { width:350px; height:350px; background:rgba(124,92,191,.25); top:-80px; right:-80px; }
+.ob2 { width:300px; height:300px; background:rgba(39,131,222,.2); bottom:-60px; left:-60px; }
+
+.onboard-slides { display:flex; transition:transform .4s cubic-bezier(.4,0,.2,1); }
+.onboard-slide {
+  min-width:100vw; min-height:100vh; padding:60px 32px 40px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; z-index:1; position:relative;
+}
+
+.ob-icon {
+  font-size:80px; margin-bottom:28px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+.ob-title { font-size:32px; font-weight:900; line-height:1.2; margin-bottom:14px; }
+.ob-title span {
+  background:var(--grad);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.ob-desc { font-size:15px; color:var(--text2); line-height:1.7; max-width:320px; margin-bottom:36px; }
+
+.ob-dots { display:flex; gap:8px; margin-bottom:36px; }
+.ob-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:.3s; }
+.ob-dot.active { width:24px; border-radius:4px; background:var(--purple); }
+
+.ob-next {
+  width:100%; max-width:360px; padding:16px;
+  background:var(--grad);
+  border:none; border-radius:50px; color:white;
+  font-size:17px; font-weight:700; font-family:'Tajawal',sans-serif;
+  cursor:pointer;
+  box-shadow:0 8px 32px rgba(124,92,191,.4);
+  transition:transform .15s, box-shadow .15s;
+}
+.ob-next:active { transform:scale(.97); box-shadow:0 4px 16px rgba(124,92,191,.3); }
+.ob-skip {
+  background:none; border:none; color:var(--text3);
+  font-size:14px; font-family:'Tajawal',sans-serif;
+  cursor:pointer; margin-top:14px; padding:8px;
+}
+
+/* ============ AUTH SCREEN ============ */
+#auth {
+  background: linear-gradient(160deg, #1a0533 0%, #0d1f4a 60%, #0a2a1a 100%);
+  overflow-y:auto; align-items:center; justify-content:center;
+}
+.auth-orb1 { position:fixed; width:350px; height:350px; background:rgba(124,92,191,.25); top:-80px; right:-80px; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0; }
+.auth-orb2 { position:fixed; width:280px; height:280px; background:rgba(39,131,222,.2); bottom:-60px; left:-60px; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0; }
+
+.auth-card {
+  width:100%; max-width:400px;
+  padding:36px 28px 32px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;
+  backdrop-filter:blur(20px);
+  z-index:1;
+  margin:40px 20px;
+  animation: cardIn .4s ease;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+.auth-logo { display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:28px; }
+.auth-logo-mark {
+  width:44px; height:44px;
+  background:var(--grad);
+  border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 16px rgba(124,92,191,.4);
+}
+.auth-logo-mark svg { width:24px; height:24px; fill:white; }
+.auth-logo-name {
+  font-size:24px; font-weight:900;
+  background:var(--grad);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+
+.auth-tabs { display:flex; background:rgba(255,255,255,.06); border-radius:12px; padding:4px; margin-bottom:28px; }
+.auth-tab {
+  flex:1; padding:10px; text-align:center;
+  font-size:14px; font-weight:600; font-family:'Tajawal',sans-serif;
+  border:none; background:transparent; color:var(--text2);
+  border-radius:9px; cursor:pointer; transition:.2s;
+}
+.auth-tab.active { background:rgba(124,92,191,.3); color:var(--text); }
+
+.auth-form { display:flex; flex-direction:column; gap:14px; }
+.auth-input-wrap { position:relative; }
+.auth-input-icon {
+  position:absolute; right:16px; top:50%; transform:translateY(-50%);
+  font-size:18px; opacity:.4; pointer-events:none;
+}
+.auth-input {
+  width:100%; padding:14px 44px 14px 16px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;
+  color:var(--text); font-size:15px; font-family:'Tajawal',sans-serif;
+  outline:none; transition:.2s;
+  direction:rtl;
+}
+.auth-input:focus { border-color:var(--purple); background:rgba(124,92,191,.08); }
+.auth-input::placeholder { color:var(--text3); }
+
+.auth-forgot {
+  text-align:left; font-size:13px; color:var(--purple);
+  background:none; border:none; cursor:pointer; font-family:'Tajawal',sans-serif;
+  margin-top:-6px;
+}
+
+.auth-btn {
+  width:100%; padding:16px;
+  background:var(--grad);
+  border:none; border-radius:50px; color:white;
+  font-size:17px; font-weight:700; font-family:'Tajawal',sans-serif;
+  cursor:pointer;
+  box-shadow:0 8px 32px rgba(124,92,191,.4);
+  transition:transform .15s;
+  margin-top:4px;
+}
+.auth-btn:active { transform:scale(.97); }
+
+.auth-divider { display:flex; align-items:center; gap:12px; margin:4px 0; }
+.auth-divider-line { flex:1; height:1px; background:rgba(255,255,255,.1); }
+.auth-divider-text { font-size:12px; color:var(--text3); }
+
+.auth-social { display:flex; }
+.auth-social-btn {
+  width:100%; min-height:48px; padding:12px 16px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  background:#fff; border:1px solid rgba(255,255,255,.18);
+  border-radius:13px; color:#2C2C2B;
+  font-size:15px; font-weight:700; font-family:'Tajawal',Arial,sans-serif;
+  cursor:pointer; transition:transform .15s, background .15s;
+}
+.auth-social-btn:hover { background:#F9F8F7; }
+.auth-social-btn:active { transform:scale(.98); }
+.auth-social-btn:focus-visible { outline:3px solid rgba(94,159,232,.55); outline-offset:2px; }
+.google-mark { width:20px; height:20px; flex:0 0 20px; }
+.auth-status { min-height:20px; margin-top:10px; font-size:12px; line-height:1.5; color:var(--text2); text-align:center; }
+.auth-status.error { color:#FF9A90; }
+
+.auth-terms { font-size:12px; color:var(--text3); text-align:center; line-height:1.6; margin-top:8px; }
+.auth-terms a { color:var(--purple); text-decoration:none; }
+
+.auth-trial-badge {
+  background:linear-gradient(135deg,rgba(124,92,191,.2),rgba(39,131,222,.15));
+  border:1px solid rgba(124,92,191,.3);
+  border-radius:12px; padding:12px 16px;
+  text-align:center; margin-bottom:20px;
+}
+.auth-trial-badge strong { font-size:14px; color:var(--text); display:block; margin-bottom:3px; }
+.auth-trial-badge span { font-size:12px; color:var(--text2); }
+
+/* ============ MAIN APP ============ */
+#app { display:none; flex-direction:column; }
+#app.active { display:flex; }
+
+.app-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.header-logo { display:flex; align-items:center; gap:8px; }
+.header-logo-mark {
+  width:32px; height:32px;
+  background:var(--grad);
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+}
+.header-logo-mark svg { width:18px; height:18px; fill:white; }
+.header-name { font-size:18px; font-weight:800; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.header-actions { display:flex; gap:8px; align-items:center; }
+.hbtn {
+  width:36px; height:36px;
+  background:var(--surface2); border:none; border-radius:10px;
+  color:var(--text); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:.15s;
+}
+.hbtn:active { background:rgba(255,255,255,.1); }
+.install-hbtn {
+  background:linear-gradient(135deg,rgba(124,92,191,.3),rgba(39,131,222,.25));
+  border:1px solid rgba(124,92,191,.4);
+  color:white;
+  font-size:14px;
+}
+
+.canvas-wrap {
+  flex:1; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; position:relative;
+}
+.canvas-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(124,92,191,.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+#drawCanvas {
+  border-radius:16px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 8px 40px rgba(0,0,0,.4);
+  cursor:crosshair;
+  touch-action:none;
+}
+
+/* Toolbars */
+.left-toolbar {
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:6px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:8px;
+}
+.right-toolbar {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:6px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:8px;
+}
+.tool-btn {
+  width:40px; height:40px;
+  background:transparent; border:none; border-radius:10px;
+  color:var(--text2); font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:.15s; position:relative;
+}
+.tool-btn:active, .tool-btn.active { background:rgba(124,92,191,.25); color:var(--purple); }
+.tool-sep { height:1px; background:var(--border); margin:2px 0; }
+
+/* Bottom toolbar */
+.bottom-bar {
+  background:var(--surface); border-top:1px solid var(--border);
+  padding:8px 12px 20px;
+  display:flex; flex-direction:column; gap:8px;
+  flex-shrink:0;
+}
+.color-row { display:flex; gap:6px; align-items:center; }
+.color-scroll { display:flex; gap:6px; overflow-x:auto; flex:1; padding-bottom:2px; scrollbar-width:none; }
+.color-scroll::-webkit-scrollbar { display:none; }
+.color-dot {
+  width:30px; height:30px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:.15s; flex-shrink:0;
+}
+.color-dot.active { border-color:white; transform:scale(1.15); }
+.color-add {
+  width:30px; height:30px; border-radius:50%;
+  background:var(--surface2); border:1.5px dashed rgba(255,255,255,.2);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text3); font-size:16px; cursor:pointer; flex-shrink:0;
+}
+
+.size-row { display:flex; align-items:center; gap:10px; }
+.size-row span { font-size:12px; color:var(--text3); white-space:nowrap; }
+.size-slider {
+  flex:1; -webkit-appearance:none; height:4px;
+  background:rgba(255,255,255,.1); border-radius:10px; outline:none;
+}
+.size-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:18px; height:18px;
+  border-radius:50%; background:var(--purple);
+  box-shadow:0 2px 8px rgba(124,92,191,.5); cursor:pointer;
+}
+.opacity-slider { flex:1; -webkit-appearance:none; height:4px; border-radius:10px; outline:none; }
+.opacity-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:white; box-shadow:0 2px 8px rgba(0,0,0,.3); cursor:pointer; }
+
+/* Nav */
+.bottom-nav {
+  display:flex; background:var(--surface); border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.nav-item {
+  flex:1; padding:10px 4px 16px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:none; color:var(--text3); cursor:pointer;
+  font-family:'Tajawal',sans-serif; font-size:10px; transition:.15s;
+}
+.nav-item.active { color:var(--purple); }
+.nav-item svg { width:22px; height:22px; fill:currentColor; }
+
+/* Panel overlay */
+.panel-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.5); z-index:50;
+  display:none; align-items:flex-end;
+  backdrop-filter:blur(4px);
+}
+.panel-overlay.open { display:flex; }
+.panel {
+  width:100%; background:var(--surface);
+  border-radius:24px 24px 0 0;
+  padding:20px;
+  animation:panelUp .3s ease;
+}
+@keyframes panelUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.panel-handle {
+  width:40px; height:4px; background:rgba(255,255,255,.15);
+  border-radius:10px; margin:0 auto 20px;
+}
+.panel-title { font-size:17px; font-weight:700; margin-bottom:16px; }
+.layer-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:12px;
+  background:var(--surface2); margin-bottom:8px; cursor:pointer;
+}
+.layer-thumb {
+  width:40px; height:40px; border-radius:8px;
+  background:rgba(255,255,255,.05); border:1px solid var(--border);
+}
+.layer-name { flex:1; font-size:14px; }
+.layer-vis { font-size:18px; color:var(--text3); }
+
+/* Profile panel */
+.profile-header {
+  display:flex; align-items:center; gap:14px; margin-bottom:20px;
+}
+.profile-avatar {
+  width:56px; height:56px; border-radius:50%;
+  background:var(--grad); display:flex; align-items:center; justify-content:center;
+  font-size:24px; font-weight:700; color:white; flex-shrink:0;
+}
+.profile-name { font-size:17px; font-weight:700; }
+.profile-email { font-size:13px; color:var(--text2); margin-top:2px; }
+.profile-plan {
+  display:inline-flex; align-items:center; gap:4px;
+  background:linear-gradient(135deg,rgba(124,92,191,.2),rgba(39,131,222,.15));
+  border:1px solid rgba(124,92,191,.3); border-radius:20px;
+  padding:3px 10px; font-size:11px; color:var(--purple); margin-top:6px;
+}
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; border-bottom:1px solid var(--border);
+}
+.setting-row:last-child { border:none; }
+.setting-label { font-size:15px; }
+.setting-val { font-size:14px; color:var(--text2); display:flex; align-items:center; gap:6px; }
+.setting-arrow { color:var(--text3); }
+
+.signout-btn {
+  width:100%; padding:14px;
+  margin-top:16px;
+  background:rgba(229,100,88,.12);
+  border:1px solid rgba(229,100,88,.3);
+  border-radius:13px; color:var(--red);
+  font-size:15px; font-weight:600; font-family:'Tajawal',sans-serif;
+  cursor:pointer;
+}
+
+/* PWA Toast & Install Banner */
+.app-toast {
+  position:fixed; bottom:74px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:rgba(26,26,38,0.95); border:1px solid rgba(124,92,191,0.4);
+  color:var(--text); padding:10px 20px; border-radius:30px;
+  font-size:13px; font-weight:600; z-index:9999;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5); backdrop-filter:blur(12px);
+  pointer-events:none; opacity:0; transition:transform .3s ease, opacity .3s ease;
+  white-space:nowrap; text-align:center;
+}
+.app-toast.show {
+  transform:translateX(-50%) translateY(0); opacity:1;
+}
+
+.ios-step {
+  display:flex; align-items:center; gap:12px; margin-bottom:12px;
+  background:var(--surface2); padding:12px 14px; border-radius:12px;
+  font-size:14px; line-height:1.5;
+}
+.ios-step-num {
+  width:26px; height:26px; border-radius:50%; background:var(--grad);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:bold; font-size:13px; flex-shrink:0;
+}
+</style>
+</head>
+<body>
+
+<!-- ========== SPLASH ========== -->
+<div id="splash" class="screen active">
+  <div class="splash-orb splash-orb1"></div>
+  <div class="splash-orb splash-orb2"></div>
+  <div class="splash-inner">
+    <div class="splash-logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    </div>
+    <div class="splash-name">رسّام</div>
+    <div class="splash-tagline">ارسم بحرية — من قلب الخليج</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+</div>
+
+<!-- ========== ONBOARDING ========== -->
+<div id="onboard" class="screen">
+  <div class="onboard-orb ob1"></div>
+  <div class="onboard-orb ob2"></div>
+  <div class="onboard-slides" id="obSlides">
+
+    <div class="onboard-slide">
+      <div class="ob-icon">🎨</div>
+      <div class="ob-title">مرحباً بك في <span>رسّام</span></div>
+      <div class="ob-desc">تطبيق الرسم الاحترافي المصمم خصيصاً لمستخدمي منطقة الخليج العربي. ارسم، أبدع، وعبّر.</div>
+      <div class="ob-dots">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <button class="ob-next" onclick="nextSlide()">التالي</button>
+      <button class="ob-skip" onclick="goAuth()">تخطي</button>
+    </div>
+
+    <div class="onboard-slide">
+      <div class="ob-icon">✏️</div>
+      <div class="ob-title">أدوات <span>احترافية</span></div>
+      <div class="ob-desc">فرشاة، قلم، ممحاة، شكل — كل الأدوات التي يحتاجها الفنان المحترف في مكان واحد.</div>
+      <div class="ob-dots">
+        <div class="ob-dot"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <button class="ob-next" onclick="nextSlide()">التالي</button>
+      <button class="ob-skip" onclick="goAuth()">تخطي</button>
+    </div>
+
+    <div class="onboard-slide">
+      <div class="ob-icon">☁️</div>
+      <div class="ob-title">احفظ <span>في السحابة</span></div>
+      <div class="ob-desc">أعمالك الفنية محفوظة تلقائياً في السحابة. ابدأ على هاتفك وأكمل على أي جهاز.</div>
+      <div class="ob-dots">
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot active"></div>
+      </div>
+      <button class="ob-next" onclick="goAuth()">ابدأ الآن 🎉</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth" class="screen">
+  <div class="auth-orb1"></div>
+  <div class="auth-orb2"></div>
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      </div>
+      <div class="auth-logo-name">رسّام</div>
+    </div>
+
+    <div class="auth-trial-badge">
+      <strong>🎁 جرّب مجاناً لمدة 7 أيام</strong>
+      <span>ثم 100 دولار سنوياً • إلغاء في أي وقت</span>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">تسجيل الدخول</button>
+      <button class="auth-tab" onclick="switchTab('register')">إنشاء حساب</button>
+    </div>
+    <div id="authStatus" class="auth-status" role="status" aria-live="polite"></div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="auth-form">
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">📧</span>
+        <input class="auth-input" type="email" placeholder="البريد الإلكتروني" dir="rtl">
+      </div>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">🔒</span>
+        <input class="auth-input" type="password" placeholder="كلمة المرور" dir="rtl">
+      </div>
+      <button class="auth-forgot">نسيت كلمة المرور؟</button>
+      <button class="auth-btn" onclick="goApp()">تسجيل الدخول</button>
+      <div class="auth-divider">
+        <div class="auth-divider-line"></div>
+        <div class="auth-divider-text">أو</div>
+        <div class="auth-divider-line"></div>
+      </div>
+      <div class="auth-social">
+        <button class="auth-social-btn" type="button" onclick="handleGoogleSignIn()" aria-label="متابعة باستخدام Google">
+          <svg class="google-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.36l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.62A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.41 13.94A6 6 0 0 1 6.1 12c0-.67.12-1.33.31-1.94V7.44H3.06A10 10 0 0 0 2 12c0 1.61.39 3.14 1.06 4.56l3.35-2.62z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.79.51 3.82 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.44l3.35 2.62C7.2 7.7 9.4 5.94 12 5.94z"/></svg>
+          <span>المتابعة باستخدام Google</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="auth-form" style="display:none">
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">👤</span>
+        <input class="auth-input" type="text" placeholder="الاسم الكامل" dir="rtl">
+      </div>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">📧</span>
+        <input class="auth-input" type="email" placeholder="البريد الإلكتروني" dir="rtl">
+      </div>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">🔒</span>
+        <input class="auth-input" type="password" placeholder="كلمة المرور" dir="rtl">
+      </div>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">🔒</span>
+        <input class="auth-input" type="password" placeholder="تأكيد كلمة المرور" dir="rtl">
+      </div>
+      <button class="auth-btn" onclick="goApp()">إنشاء حساب مجاني</button>
+      <div class="auth-divider">
+        <div class="auth-divider-line"></div>
+        <div class="auth-divider-text">أو سجّل بـ</div>
+        <div class="auth-divider-line"></div>
+      </div>
+      <div class="auth-social">
+        <button class="auth-social-btn" type="button" onclick="handleGoogleSignIn()" aria-label="متابعة باستخدام Google">
+          <svg class="google-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.36l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.62A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.41 13.94A6 6 0 0 1 6.1 12c0-.67.12-1.33.31-1.94V7.44H3.06A10 10 0 0 0 2 12c0 1.61.39 3.14 1.06 4.56l3.35-2.62z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.79.51 3.82 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.44l3.35 2.62C7.2 7.7 9.4 5.94 12 5.94z"/></svg>
+          <span>المتابعة باستخدام Google</span>
+        </button>
+      </div>
+      <div class="auth-terms">بالتسجيل، توافق على <a href="#">شروط الاستخدام</a> و<a href="#">سياسة الخصوصية</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="app" class="screen">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="header-logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      </div>
+      <span class="header-name">رسّام</span>
+    </div>
+    <div style="font-size:13px;color:var(--text2)">لوحة جديدة</div>
+    <div class="header-actions">
+      <!-- PWA In-App Install Button -->
+      <button class="hbtn install-hbtn" id="installBtn" onclick="triggerPwaInstall()" title="تثبيت التطبيق" style="display:none">📲</button>
+      <button class="hbtn" onclick="clearCanvas()" title="مسح الكل">🗑️</button>
+      <button class="hbtn" onclick="saveCanvas()" title="حفظ">💾</button>
+      <button class="hbtn" onclick="openPanel('profilePanel')" title="الحساب">👤</button>
+    </div>
+  </div>
+
+  <!-- Canvas Area -->
+  <div class="canvas-wrap">
+    <div class="canvas-bg"></div>
+    <canvas id="drawCanvas" width="320" height="420"></canvas>
+
+    <!-- Left Toolbar -->
+    <div class="left-toolbar">
+      <button class="tool-btn active" id="tBrush" onclick="setTool('brush',this)" title="فرشاة">🖌️</button>
+      <button class="tool-btn" id="tPen" onclick="setTool('pen',this)" title="قلم">✒️</button>
+      <button class="tool-btn" id="tMarker" onclick="setTool('marker',this)" title="ماركر">🖊️</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="tEraser" onclick="setTool('eraser',this)" title="ممحاة">⬜</button>
+      <button class="tool-btn" id="tFill" onclick="setTool('fill',this)" title="تعبئة">🪣</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="tLine" onclick="setTool('line',this)" title="خط">📏</button>
+      <button class="tool-btn" id="tRect" onclick="setTool('rect',this)" title="مستطيل">⬛</button>
+      <button class="tool-btn" id="tCircle" onclick="setTool('circle',this)" title="دائرة">⭕</button>
+    </div>
+
+    <!-- Right Toolbar -->
+    <div class="right-toolbar">
+      <button class="tool-btn" onclick="undo()" title="تراجع">↩️</button>
+      <button class="tool-btn" onclick="redo()" title="إعادة">↪️</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" onclick="openPanel('layersPanel')" title="الطبقات">📚</button>
+      <button class="tool-btn" onclick="zoomIn()" title="تكبير">🔍</button>
+      <button class="tool-btn" onclick="zoomOut()" title="تصغير">🔎</button>
+    </div>
+  </div>
+
+  <!-- Bottom Toolbar -->
+  <div class="bottom-bar">
+    <div class="color-row">
+      <span style="font-size:12px;color:var(--text3);white-space:nowrap">اللون</span>
+      <div class="color-scroll" id="colorRow"></div>
+      <div class="color-add" onclick="pickColor()">+</div>
+    </div>
+    <div class="size-row">
+      <span>🖌️ الحجم</span>
+      <input type="range" class="size-slider" id="sizeSlider" min="1" max="60" value="8" oninput="updateSize(this.value)">
+      <span id="sizeVal">8px</span>
+    </div>
+    <div class="size-row">
+      <span>✨ الشفافية</span>
+      <input type="range" class="opacity-slider" id="opacitySlider" min="5" max="100" value="100"
+        style="background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,1))"
+        oninput="updateOpacity(this.value)">
+      <span id="opVal">100%</span>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+      رسم
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+      معرض
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      دروس
+    </button>
+    <button class="nav-item" onclick="openPanel('profilePanel')">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4-1.3 4-4s-1.3-4-4-4-4 1.3-4 4 1.3 4 4 4zm0 2c-2.7 0-8 1.35-8 4v2h16v-2c0-2.65-5.3-4-8-4z"/></svg>
+      حسابي
+    </button>
+  </div>
+
+  <!-- Layers Panel -->
+  <div class="panel-overlay" id="layersPanelOverlay" onclick="closePanel('layersPanel')">
+    <div class="panel" onclick="event.stopPropagation()" id="layersPanel">
+      <div class="panel-handle"></div>
+      <div class="panel-title">الطبقات</div>
+      <div class="layer-item"><div class="layer-thumb"></div><div class="layer-name">الطبقة 1</div><div class="layer-vis">👁️</div></div>
+      <div class="layer-item"><div class="layer-thumb"></div><div class="layer-name">طبقة الخلفية</div><div class="layer-vis">👁️</div></div>
+      <button style="width:100%;padding:12px;background:var(--grad);border:none;border-radius:12px;color:white;font-size:14px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:8px">+ إضافة طبقة</button>
+    </div>
+  </div>
+
+  <!-- Profile Panel -->
+  <div class="panel-overlay" id="profilePanelOverlay" onclick="closePanel('profilePanel')">
+    <div class="panel" onclick="event.stopPropagation()" id="profilePanel">
+      <div class="panel-handle"></div>
+      <div class="profile-header">
+        <div class="profile-avatar">ف</div>
+        <div>
+          <div class="profile-name" id="pName">فنان رسّام</div>
+          <div class="profile-email" id="pEmail">artist@rassam.app</div>
+          <div class="profile-plan">⭐ احترافي — 100 دولار سنوياً</div>
+        </div>
+      </div>
+      <div class="setting-row" id="installSettingRow" style="cursor:pointer;" onclick="triggerPwaInstall()">
+        <div class="setting-label">📲 تثبيت التطبيق على الجهاز</div>
+        <div class="setting-val" id="installStatusText">تثبيت PWA <span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">خطتي</div>
+        <div class="setting-val">100 دولار / سنة <span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">اللغة</div>
+        <div class="setting-val">العربية <span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">الإشعارات</div>
+        <div class="setting-val">مفعّل <span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">العمل بدون إنترنت</div>
+        <div class="setting-val">متاح دائماً ⚡</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">سياسة الخصوصية</div>
+        <div class="setting-val"><span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">الإصدار</div>
+        <div class="setting-val">1.0.0 (PWA)</div>
+      </div>
+      <button class="signout-btn" onclick="signOut()">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <!-- iOS PWA Install Guide Panel -->
+  <div class="panel-overlay" id="iosInstallPanelOverlay" onclick="closePanel('iosInstallPanel')">
+    <div class="panel" onclick="event.stopPropagation()" id="iosInstallPanel">
+      <div class="panel-handle"></div>
+      <div class="panel-title">📱 تثبيت رسّام على iPhone / iPad</div>
+      <div class="ios-step">
+        <div class="ios-step-num">1</div>
+        <div>اضغط على زر <strong>المشاركة (Share)</strong> 📤 في شريط متصفح سفاري بالأسفل.</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">2</div>
+        <div>مرّر للأسفل واختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong> ➕.</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">3</div>
+        <div>اضغط <strong>إضافة (Add)</strong> في الزاوية العلوية لتثبيت التطبيق كأيقونة مستقلة.</div>
+      </div>
+      <button style="width:100%;padding:14px;background:var(--grad);border:none;border-radius:12px;color:white;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:12px" onclick="closePanel('iosInstallPanel')">فهمت ذلك ✓</button>
+    </div>
+  </div>
+</div>
+
+<input type="color" id="colorPicker" style="opacity:0;position:fixed;top:-100px" onchange="applyPickedColor(this.value)">
+
+<!-- Offline / Notification Toast -->
+<div id="appToast" class="app-toast"></div>
+
+<script>
+// ============ SCREEN FLOW ============
+const COLORS = ['#2C2C2B','#E56458','#F5A623','#F5E642','#46A171','#2783DE','#7C5CBF','#FF6B9D','#FFFFFF','#8B4513','#FF8C00','#20B2AA'];
+// Replace this value with the OAuth 2.0 Web Client ID from Google Cloud Console.
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+let googleAuthReady = false;
+let currentSlide = 0;
+
+window.addEventListener('load', () => {
+  setTimeout(() => showScreen('onboard'), 2500);
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function nextSlide() {
+  const slides = document.getElementById('obSlides');
+  currentSlide++;
+  if (currentSlide >= 3) { goAuth(); return; }
+  slides.style.transform = `translateX(${currentSlide * 100}%)`;
+}
+
+function goAuth() { showScreen('auth'); }
+
+function setAuthStatus(message, isError = false) {
+  const status = document.getElementById('authStatus');
+  status.textContent = message;
+  status.classList.toggle('error', isError);
+}
+
+function initGoogleAuth() {
+  if (!window.google || !google.accounts || !google.accounts.id) return;
+  if (GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
+    setAuthStatus('أضف معرّف عميل Google OAuth لتفعيل تسجيل الدخول.', true);
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true
+  });
+  googleAuthReady = true;
+}
+
+function handleGoogleSignIn() {
+  setAuthStatus('جاري الاتصال بـ Google…');
+  if (!googleAuthReady) {
+    initGoogleAuth();
+    if (!googleAuthReady) {
+      setAuthStatus('تعذّر بدء Google. تحقّق من معرّف العميل والنطاق المصرّح به.', true);
+      return;
+    }
+  }
+  google.accounts.id.prompt(notification => {
+    if (notification.isNotDisplayed && notification.isNotDisplayed()) {
+      setAuthStatus('لم تظهر نافذة Google. اسمح بالنوافذ المنبثقة وحاول مجدداً.', true);
+    }
+  });
+}
+
+function handleGoogleCredential(response) {
+  try {
+    const base64 = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const profile = JSON.parse(new TextDecoder().decode(bytes));
+    document.getElementById('pName').textContent = profile.name || 'فنان رسّام';
+    document.getElementById('pEmail').textContent = profile.email || '';
+    const avatar = document.querySelector('.profile-avatar');
+    avatar.textContent = (profile.name || 'ف').trim().charAt(0);
+    localStorage.setItem('rassamGoogleProfile', JSON.stringify({name:profile.name,email:profile.email,picture:profile.picture}));
+    setAuthStatus('تم تسجيل الدخول بنجاح.');
+    goApp();
+  } catch (error) {
+    setAuthStatus('تعذّر قراءة بيانات حساب Google. حاول مجدداً.', true);
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').style.display = tab==='login'?'flex':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'flex':'none';
+}
+
+function goApp() {
+  showScreen('app');
+  initCanvas();
+}
+
+function signOut() {
+  closePanel('profilePanel');
+  setTimeout(() => showScreen('auth'), 300);
+}
+
+// ============ PANELS ============
+function openPanel(name) {
+  const overlay = document.getElementById(name+'Overlay');
+  if (overlay) overlay.classList.add('open');
+}
+function closePanel(name) {
+  const overlay = document.getElementById(name+'Overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+// ============ CANVAS ============
+let tool = 'brush', brushSize = 8, opacity = 1;
+let isDrawing = false, lastX = 0, lastY = 0;
+let undoStack = [], redoStack = [];
+let zoom = 1;
+let activeColor = COLORS[5];
+
+function initCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const wrap = document.querySelector('.canvas-wrap');
+  const w = Math.min(wrap.clientWidth - 80, 380);
+  const h = Math.min(wrap.clientHeight - 20, 480);
+  canvas.width = w; canvas.height = h;
+  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0,0,w,h);
+
+  // Color row
+  const row = document.getElementById('colorRow');
+  row.innerHTML = '';
+  COLORS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'color-dot' + (c === activeColor ? ' active' : '');
+    d.style.background = c;
+    d.onclick = () => { activeColor = c; document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active')); d.classList.add('active'); };
+    row.appendChild(d);
+  });
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchend', endDraw);
+
+  saveState();
+}
+
+function getPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+
+function startDraw(e) {
+  const canvas = document.getElementById('drawCanvas');
+  [lastX, lastY] = getPos(e, canvas);
+  isDrawing = true;
+  if(tool==='fill') { fillAt(lastX, lastY); endDraw(); }
+}
+
+function draw(e) {
+  if(!isDrawing) return;
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  const [x, y] = getPos(e, canvas);
+
+  ctx.globalAlpha = opacity;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+
+  if(tool==='eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.lineWidth = brushSize * 2;
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = activeColor;
+    ctx.lineWidth = tool==='pen' ? brushSize/2 : tool==='marker' ? brushSize*2 : brushSize;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  [lastX, lastY] = [x, y];
+}
+
+function endDraw() {
+  if(isDrawing) { isDrawing = false; saveState(); }
+}
+
+function fillAt(x, y) {
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d = img.data;
+  const idx = (Math.floor(y)*canvas.width+Math.floor(x))*4;
+  const tr=d[idx],tg=d[idx+1],tb=d[idx+2],ta=d[idx+3];
+  const fc = hexToRgb(activeColor);
+  if(!fc) return;
+  const stack = [[Math.floor(x),Math.floor(y)]];
+  const seen = new Set();
+  while(stack.length) {
+    const [cx,cy] = stack.pop();
+    if(cx<0||cy<0||cx>=canvas.width||cy>=canvas.height) continue;
+    const i=(cy*canvas.width+cx)*4;
+    const k=cx+','+cy;
+    if(seen.has(k)) continue; seen.add(k);
+    if(Math.abs(d[i]-tr)>30||Math.abs(d[i+1]-tg)>30||Math.abs(d[i+2]-tb)>30) continue;
+    d[i]=fc.r; d[i+1]=fc.g; d[i+2]=fc.b; d[i+3]=255;
+    stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+  ctx.putImageData(img,0,0);
+}
+
+function hexToRgb(hex) {
+  const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:null;
+}
+
+function saveState() {
+  const canvas = document.getElementById('drawCanvas');
+  undoStack.push(canvas.toDataURL());
+  if(undoStack.length>30) undoStack.shift();
+  redoStack = [];
+}
+
+function undo() {
+  if(undoStack.length<=1) return;
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  redoStack.push(undoStack.pop());
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img,0,0);
+  img.src = undoStack[undoStack.length-1];
+}
+
+function redo() {
+  if(!redoStack.length) return;
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  const src = redoStack.pop();
+  undoStack.push(src);
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img,0,0);
+  img.src = src;
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle='#FFFFFF';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  saveState();
+}
+
+function saveCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'rassam-artwork.png';
+  a.click();
+  showToast('تم تنزيل لوحتك الفنية بنجاح 🎨');
+}
+
+function setTool(t, btn) {
+  tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updateSize(v) {
+  brushSize = parseInt(v);
+  document.getElementById('sizeVal').textContent = v+'px';
+}
+
+function updateOpacity(v) {
+  opacity = v/100;
+  document.getElementById('opVal').textContent = v+'%';
+}
+
+function zoomIn() { zoom = Math.min(zoom+0.25, 3); applyZoom(); }
+function zoomOut() { zoom = Math.max(zoom-0.25, 0.5); applyZoom(); }
+function applyZoom() {
+  const canvas = document.getElementById('drawCanvas');
+  canvas.style.transform = `scale(${zoom})`;
+}
+
+function pickColor() { document.getElementById('colorPicker').click(); }
+function applyPickedColor(v) {
+  activeColor = v;
+  const d = document.createElement('div');
+  d.className = 'color-dot active';
+  d.style.background = v;
+  const row = document.getElementById('colorRow');
+  document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active'));
+  d.onclick = () => { activeColor = v; document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active')); d.classList.add('active'); };
+  row.appendChild(d);
+}
+
+// ============ PWA & SERVICE WORKER ============
+function showToast(msg) {
+  let toast = document.getElementById('appToast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('Rassam SW registered with scope:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('Rassam SW registration failed:', err);
+      });
+  });
+}
+
+// Connectivity change detection
+window.addEventListener('online', () => showToast('عاد الاتصال بالإنترنت 🌐'));
+window.addEventListener('offline', () => showToast('أنت في وضع عدم الاتصال 📴 يمكنك متابعة الرسم'));
+
+// In-App Install Prompt Handling
+let deferredPrompt = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn && !isStandalone) {
+    installBtn.style.display = 'flex';
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = 'none';
+  const installStatusText = document.getElementById('installStatusText');
+  if (installStatusText) installStatusText.textContent = 'تم التثبيت ✓';
+  showToast('تم تثبيت تطبيق رسّام على جهازك بنجاح! 🎉');
+});
+
+function triggerPwaInstall() {
+  if (isStandalone) {
+    showToast('التطبيق مثبت بالفعل ويعمل في الوضع المستقل ✓');
+    return;
+  }
+
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        showToast('جاري تثبيت تطبيق رسّام…');
+      }
+      deferredPrompt = null;
+    });
+  } else if (isIOS) {
+    openPanel('iosInstallPanel');
+  } else {
+    // Show instruction for browsers without beforeinstallprompt or desktop
+    showToast('لتثبيت التطبيق: اضغط على أيقونة التثبيت في شريط المتصفح أو اختر "إضافة إلى الشاشة الرئيسية"');
+  }
+}
+
+// Check initial standalone status
+if (isStandalone) {
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = 'none';
+  const installStatusText = document.getElementById('installStatusText');
+  if (installStatusText) installStatusText.textContent = 'مثبت ✓';
+} else if (isIOS) {
+  // Always offer install button for iOS users
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = 'flex';
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
+</body>
+</html>

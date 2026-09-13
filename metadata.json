@@ -1,0 +1,6 @@
+{
+  "name": "رسّام - تطبيق الرسم الاحترافي",
+  "description": "تطبيق رسم احترافي متكامل مع دعم كامل للعمل بدون إنترنت وإمكانية التثبيت كتطبيق PWA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
