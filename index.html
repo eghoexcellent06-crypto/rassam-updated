@@ -720,6 +720,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); fon
         <div class="setting-label">📲 تثبيت التطبيق على الجهاز</div>
         <div class="setting-val" id="installStatusText">تثبيت PWA <span class="setting-arrow">›</span></div>
       </div>
+      <div class="setting-row" style="cursor:pointer;" onclick="downloadNetlifyZip()">
+        <div class="setting-label">📦 حزمة النشر لـ Netlify</div>
+        <div class="setting-val" style="color:var(--blue)">تحميل .zip <span class="setting-arrow">›</span></div>
+      </div>
       <div class="setting-row">
         <div class="setting-label">خطتي</div>
         <div class="setting-val">100 دولار / سنة <span class="setting-arrow">›</span></div>
@@ -1142,6 +1146,16 @@ function triggerPwaInstall() {
     // Show instruction for browsers without beforeinstallprompt or desktop
     showToast('لتثبيت التطبيق: اضغط على أيقونة التثبيت في شريط المتصفح أو اختر "إضافة إلى الشاشة الرئيسية"');
   }
+}
+
+function downloadNetlifyZip() {
+  const a = document.createElement('a');
+  a.href = '/netlify-deploy.zip';
+  a.download = 'rassam-netlify-deploy.zip';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('جاري بدء تنزيل ملف Netlify ZIP 📦');
 }
 
 // Check initial standalone status
